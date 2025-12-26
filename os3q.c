@@ -66,7 +66,6 @@ QueueOS* init(int max_size) {
         perror("Failed to allocate queue structure"); // Check malloc return value
         exit(1);
     }
-
     q->head = NULL;
     q->tail = NULL;
     q->count = 0;
@@ -91,13 +90,13 @@ QueueOS* init(int max_size) {
         free(q);
         exit(1);
     }
-
     return q;
 }
 
 // 2. Destroy: Frees all memory including remaining nodes
 void destroy(QueueOS* q) {
-    if (q == NULL) return;
+    if (q == NULL)
+        return;
 
     // Although the instructions say "no parallel operations" during destroy,
     // acquiring the lock is a safe practice before dismantling.
@@ -109,15 +108,30 @@ void destroy(QueueOS* q) {
         current = current->next;
         free(temp); // Free remaining elements
     }
-
     pthread_mutex_unlock(&q->lock);
 
     // Destroy primitives
     pthread_mutex_destroy(&q->lock);
     pthread_cond_destroy(&q->not_full);
     pthread_cond_destroy(&q->not_empty);
-
     free(q); // Free the struct itself
 }
 
-// 3.
+// 3. Enqueue
+void enqueue(QueueOS* q, long value) {
+    if (q->count==q->max_size)//q is full
+    {
+        pthread_cond_wait(&q->not_full,&q->lock);//block the thread until enqueue is possible
+    }
+    //enqueue is possible
+    Node* new_node = (Node*)malloc(sizeof(Node));
+    new_node->data = value;
+    new_node->next = NULL;
+    if (q->tail == NULL) { //list is empty->set new head
+        q->head = new_node;
+    } else {//list is not empty->set new tail
+        q->tail->next = new_node;
+    }
+    q->tail = new_node;
+    q->count++;
+}
