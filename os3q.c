@@ -1,40 +1,3 @@
-// You must implement a queue in a file named `os3q.c`.
-// * The queue must be implemented using the **classic method with dynamic allocation** (linked list), where each element holds a value of type `long`.
-// * The queue has a maximum size (maximum number of elements) determined during initialization.
-// * The queue must support concurrency: all operations must work correctly and safely when multiple threads access the queue simultaneously.
-// **Synchronization Requirements**
-// * To support concurrency, you must implement the queue using **Mutexes (locks) and Condition Variables** only.
-// **Do not** use semaphores or atomic operations.
-// **Struct and Functions**
-// The list itself should be defined as a struct named `QueueOS` and support the following operations:
-// 1. **Init (`init`):**
-// * Receives the maximum size and initializes a new queue.
-// * Assumption: This function is called exactly once, before any other operation, and without parallel operations on the same queue.
-// 2. **Destroy (`destroy`):**
-// * Deletes the queue by freeing all relevant allocations (including elements remaining in the queue).
-// * Assumption: This function is called exactly once, after all other operations, and without parallel operations on the same queue.
-// 3. **Enqueue (`enqueue`):**
-// * Receives a value and adds it to the end of the queue.
-// **Blocking:** If the queue is at maximum size, the thread must block (wait) until it is possible to add the value.
-// 4. **Dequeue (`dequeue`):**
-// * Removes the element at the head of the queue and returns its value.
-// **Blocking:** If the queue is empty, the thread must block (wait) until it is possible to remove a value.
-// 5. **Size (`size`):**
-// * Returns the number of elements currently in the queue.
-// 6. **Sum (`sum`):**
-// * Returns the sum of all elements in the queue.
-// **Technical Guidelines**
-// * **Header File:** A header file named `os3q.h` containing the queue declaration and operations is provided. **Do not** change this file and do not submit it.
-// **Helper Functions:** You may (and should) add helper functions and definitions in your `os3q.c` file.
-// **Implementation Style:** Do not implement the list using an array; it must be a list of pointers (classic implementation).
-// **Globals:** Avoid defining global or static variables.
-// **Multiple Queues:** The solution must support defining multiple queues, where each can be used separately and in parallel to others. Each queue may have a different maximum size.
-// * **Submission:** Submit the code **without a `main` function**. Adding a `main` function will cause the check to fail and disqualify the entire section.
-// **Error Checking:** You must check the return values of all system calls and memory allocations (specifically `malloc`).
-// ### General Submission Instructions (Relevant to Part A)
-// * The code will be compiled using: `gcc <codefiles> -Wall -pthread -o <exefile>`.
-// * The code must compile without warnings.
-// * You must manage resources and memory correctly (freeing memory, etc.).
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -60,7 +23,7 @@ struct QueueOS {
 QueueOS* init(int max_size) {
     QueueOS* q = (QueueOS*)malloc(sizeof(QueueOS));
     if (q == NULL) {
-        perror("Failed to allocate queue"); //
+        perror("Failed to allocate queue");
         exit(1);
     }
     q->head = NULL;
@@ -109,7 +72,7 @@ void destroy(QueueOS* q) {
 
 // 3. Enqueue
 void enqueue(QueueOS* q, long value) {
-    pthread_mutex_lock(&q->lock);// LOCK START
+    pthread_mutex_lock(&q->lock);
     while (q->count >= q->max_size) {
         pthread_cond_wait(&q->not_full, &q->lock);
     }
@@ -132,12 +95,12 @@ void enqueue(QueueOS* q, long value) {
     }
     q->count++;
     pthread_cond_signal(&q->not_empty);//signal consumers that data is available
-    pthread_mutex_unlock(&q->lock);//LOCK END
+    pthread_mutex_unlock(&q->lock);
 }
 
 // 4. Dequeue
 long dequeue(QueueOS* q) {
-    pthread_mutex_lock(&q->lock);// LOCK START
+    pthread_mutex_lock(&q->lock);
     while (q->count == 0) {
         pthread_cond_wait(&q->not_empty, &q->lock);
     }
@@ -151,7 +114,7 @@ long dequeue(QueueOS* q) {
     free(temp);
     q->count--;
     pthread_cond_signal(&q->not_full);// Signal producers that space is available
-    pthread_mutex_unlock(&q->lock);// LOCK END
+    pthread_mutex_unlock(&q->lock);
     return value;
 }
 
@@ -165,13 +128,13 @@ int size(QueueOS* q) {
 
 // 6. Sum
 long sum(QueueOS* q) {
-    pthread_mutex_lock(&q->lock);// LOCK START
+    pthread_mutex_lock(&q->lock);
     long total = 0;
     Node* current = q->head;
     while (current != NULL) {
         total += current->data;
         current = current->next;
     }
-    pthread_mutex_unlock(&q->lock);// LOCK END
+    pthread_mutex_unlock(&q->lock);
     return total;
 }
