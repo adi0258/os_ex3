@@ -1,13 +1,13 @@
-#ifndef OS3Q_H
-#define OS3Q_H
+struct QueueOS;
 
-typedef struct QueueOS QueueOS;
+void queueos_init(struct QueueOS *q, int max);
 
-QueueOS* init(int max_size);
-void destroy(QueueOS* q);
-void enqueue(QueueOS* q, long value);
-long dequeue(QueueOS* q);
-int size(QueueOS* q);
-long sum(QueueOS* q);
+void queueos_destroy(struct QueueOS *q);
 
-#endif
+int queueos_size(struct QueueOS *q);
+
+long queueos_sum(struct QueueOS *q);
+
+long queueos_dequeue(struct QueueOS *q);
+
+void queueos_enqueue(struct QueueOS *q, long val);
