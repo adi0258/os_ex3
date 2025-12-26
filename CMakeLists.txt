@@ -3,4 +3,6 @@ project(os_ex3 C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(os_ex3 os3q.c)
+add_executable(os_ex3 os3q.c
+        test.c
+)
