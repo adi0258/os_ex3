@@ -135,3 +135,18 @@ void enqueue(QueueOS* q, long value) {
     q->tail = new_node;
     q->count++;
 }
+
+//4. dequeue
+long dequeue (QueueOS* q) {
+    if (q->count==0)//queue is empty
+    {
+        pthread_cond_wait(&q->not_empty,&q->lock);//block the thread until dequeue is possible
+    }
+    //dequeue is possible
+    long value = q->head->data;//save value for returning
+    Node* temp = q->head;//save head for freeing
+    q->head = q->head->next;//update head
+    free(temp);
+    q->count--;
+    return value;
+}
