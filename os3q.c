@@ -150,3 +150,17 @@ long dequeue (QueueOS* q) {
     q->count--;
     return value;
 }
+
+//5. size of queue
+int size (QueueOS* q) {
+    return q->count;
+}
+
+//6. sum of elements in queue
+long sum (QueueOS* q) {
+    long sum = 0;
+    for (Node* current = q->head; current != NULL; current = current->next) {//iterate through list
+        sum += current->data;
+    }
+    return sum;
+}
