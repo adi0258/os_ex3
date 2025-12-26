@@ -73,7 +73,6 @@ QueueOS* init(int max_size) {
         free(q);
         exit(1);
     }
-    //  Check return values
     if (pthread_cond_init(&q->not_full, NULL) != 0) {
         perror("Cond init failed");
         pthread_mutex_destroy(&q->lock);
@@ -102,7 +101,6 @@ void destroy(QueueOS* q) {
         free(temp);
     }
     pthread_mutex_unlock(&q->lock);
-
     pthread_mutex_destroy(&q->lock);
     pthread_cond_destroy(&q->not_full);
     pthread_cond_destroy(&q->not_empty);
@@ -111,19 +109,14 @@ void destroy(QueueOS* q) {
 
 // 3. Enqueue
 void enqueue(QueueOS* q, long value) {
-    // LOCK START
-    pthread_mutex_lock(&q->lock); // [cite: 9]
-
-    // BLOCKING: Use WHILE, not IF
-    while (q->count >= q->max_size) { // [cite: 7]
+    pthread_mutex_lock(&q->lock);// LOCK START
+    while (q->count >= q->max_size) {
         pthread_cond_wait(&q->not_full, &q->lock);
     }
-
-    // Allocate new node
     Node* new_node = (Node*)malloc(sizeof(Node));
-    if (new_node == NULL) { //  Must check malloc
+    if (new_node == NULL) {
         perror("Failed to allocate node");
-        pthread_mutex_unlock(&q->lock); // Unlock before exiting!
+        pthread_mutex_unlock(&q->lock);
         exit(1);
     }
 
@@ -138,17 +131,13 @@ void enqueue(QueueOS* q, long value) {
         q->tail = new_node;
     }
     q->count++;
-    // Signal consumers that data is available
-    pthread_cond_signal(&q->not_empty);
-
-    // LOCK END
-    pthread_mutex_unlock(&q->lock);
+    pthread_cond_signal(&q->not_empty);//signal consumers that data is available
+    pthread_mutex_unlock(&q->lock);//LOCK END
 }
 
 // 4. Dequeue
 long dequeue(QueueOS* q) {
-    // LOCK START
-    pthread_mutex_lock(&q->lock);
+    pthread_mutex_lock(&q->lock);// LOCK START
     while (q->count == 0) {
         pthread_cond_wait(&q->not_empty, &q->lock);
     }
@@ -161,12 +150,8 @@ long dequeue(QueueOS* q) {
     }
     free(temp);
     q->count--;
-    // Signal producers that space is available
-    pthread_cond_signal(&q->not_full);
-
-    // LOCK END
-    pthread_mutex_unlock(&q->lock);
-
+    pthread_cond_signal(&q->not_full);// Signal producers that space is available
+    pthread_mutex_unlock(&q->lock);// LOCK END
     return value;
 }
 
@@ -180,13 +165,13 @@ int size(QueueOS* q) {
 
 // 6. Sum
 long sum(QueueOS* q) {
-    pthread_mutex_lock(&q->lock);
+    pthread_mutex_lock(&q->lock);// LOCK START
     long total = 0;
     Node* current = q->head;
     while (current != NULL) {
         total += current->data;
         current = current->next;
     }
-    pthread_mutex_unlock(&q->lock);
+    pthread_mutex_unlock(&q->lock);// LOCK END
     return total;
 }
