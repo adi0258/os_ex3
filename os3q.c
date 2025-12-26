@@ -3,13 +3,11 @@
 #include <pthread.h>
 #include "os3q.h"
 
-// Define the Node struct
 typedef struct Node {
     long data;
     struct Node* next;
 } Node;
 
-// Define the QueueOS struct (Complete definition needed here)
 struct QueueOS {
     Node* head;
     Node* tail;
@@ -22,16 +20,14 @@ struct QueueOS {
 };
 
 // 1. Init
-// Note: 'q' is passed by the caller. We do NOT malloc the queue itself here.
 void queueos_init(struct QueueOS* q, int max) {
     if (q == NULL) return;
 
     q->head = NULL;
     q->tail = NULL;
     q->count = 0;
-    q->max_size = max; // Set the max_size from the argument 'max'
+    q->max_size = max;
 
-    // Initialize synchronization primitives
     if (pthread_mutex_init(&q->lock, NULL) != 0) {
         perror("Mutex init failed");
         exit(1);
@@ -58,23 +54,18 @@ void queueos_destroy(struct QueueOS* q) {
     while (current != NULL) {
         Node* temp = current;
         current = current->next;
-        free(temp); // Free the nodes
+        free(temp);
     }
     pthread_mutex_unlock(&q->lock);
 
-    // Destroy primitives
     pthread_mutex_destroy(&q->lock);
     pthread_cond_destroy(&q->not_full);
     pthread_cond_destroy(&q->not_empty);
-
-    // DO NOT free(q). Since init didn't malloc 'q', destroy shouldn't free it.
 }
 
 // 3. Enqueue
 void queueos_enqueue(struct QueueOS* q, long val) {
     pthread_mutex_lock(&q->lock);
-
-    // Wait while queue is full
     while (q->count >= q->max_size) {
         pthread_cond_wait(&q->not_full, &q->lock);
     }
@@ -86,7 +77,7 @@ void queueos_enqueue(struct QueueOS* q, long val) {
         exit(1);
     }
 
-    new_node->data = val; // Use 'val', not 'value'
+    new_node->data = val;
     new_node->next = NULL;
 
     if (q->tail == NULL) {
@@ -105,8 +96,6 @@ void queueos_enqueue(struct QueueOS* q, long val) {
 // 4. Dequeue
 long queueos_dequeue(struct QueueOS* q) {
     pthread_mutex_lock(&q->lock);
-
-    // Wait while queue is empty
     while (q->count == 0) {
         pthread_cond_wait(&q->not_empty, &q->lock);
     }
